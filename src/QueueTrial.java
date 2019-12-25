@@ -29,8 +29,8 @@ public class QueueTrial {
         ConnectionFactory connectionFactory = queueTrial.getFactory();
 
 
-//        queueTrial.sendDurable(connectionFactory);
         queueTrial.send(connectionFactory);
+//        queueTrial.sendDurable(connectionFactory);
 
         queueTrial.receive(connectionFactory);
 //        queueTrial.receiveWithDefaultConsumer(connectionFactory);
@@ -42,51 +42,97 @@ public class QueueTrial {
         try {
             Connection connection = connectionFactory.newConnection();
             Channel channel = connection.createChannel();
-            channel.basicQos(1);//流速控制
-
+            channel.basicQos(2);//流速控制
             System.out.println(channel);
 
-            channel.queueDeclare(QUEUE, false, false, false, null);//不能声明同名队列，否则将覆盖前面队列的数据
+            channel.queueDeclare(QUEUE, false, false, false, null);
 
 
             Consumer consumer = new DefaultConsumer(channel) {
                 @Override
                 public void handleConsumeOk(String consumerTag) {
                     System.out.println("~~handleConsumeOk~~");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("consumerTag is " + consumerTag);
                 }
 
                 @Override
                 public void handleCancelOk(String consumerTag) {
                     System.out.println("~~handleCancelOk~~");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("consumerTag is " + consumerTag);
+
+                    try {
+                        connection.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 @Override
                 public void handleCancel(String consumerTag) throws IOException {
                     System.out.println("~~handleCancel~~");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("consumerTag is " + consumerTag);
                 }
 
                 @Override
                 public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
                     System.out.println("~~handleShutdownSignal~~");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("consumerTag is " + consumerTag);
+                    System.out.println("sig is " + sig);
+
+                    try {
+                        connection.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 @Override
                 public void handleRecoverOk(String consumerTag) {
                     System.out.println("~~handleRecoverOk~~");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("consumerTag is " + consumerTag);
+
+                    try {
+                        connection.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                     System.out.println("~~handleDelivery~~");
-                    System.out.println(new String(body));
-//                    channel.basicCancel("ccc");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("consumerTag is " + consumerTag);
+                    System.out.println("envelope is " + envelope);
+                    System.out.println("properties is " + properties);
+                    System.out.println("body is " + new String(body));
+
+//                    if (envelope.getDeliveryTag() == 5) channel.basicCancel(consumerTag);
+
+                    if (envelope.getDeliveryTag() == 10) {
+                        try {
+                            channel.close();
+                        } catch (TimeoutException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+//                    try {
+//                        Thread.sleep(1000L);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+
                 }
             };
 
             String consumerTag = channel.basicConsume(QUEUE, true, consumer);
-            System.out.println(consumerTag);
-
-
+            System.out.println("consumerTag is " + consumerTag);
 
 
         } catch (IOException e) {
@@ -128,8 +174,8 @@ public class QueueTrial {
 //        factory.setUsername(userName);
 //        factory.setPassword(password);
 //        factory.setVirtualHost(virtualHost);
-        factory.setHost(host);
 //        factory.setPort(port);
+        factory.setHost(host);
 
 //        try {
 //            URI uri = new URI("amqp://userName:password@hostName:portNumber/virtualHost");
@@ -154,39 +200,40 @@ public class QueueTrial {
 
             System.out.println(channel);
 
-            channel.queueDeclare(QUEUE, false, false, false, null);//不能声明同名队列，否则将覆盖前面队列的数据
+            channel.queueDeclare(QUEUE, false, false, false, null);
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 System.out.println("~~deliverCallback~~");
                 System.out.println(Thread.currentThread());
                 System.out.println("consumerTag is " + consumerTag);
-                String message = new String(delivery.getBody(), "UTF-8");
-                System.out.println("delivery.getBody is " + message);
                 System.out.println("delivery.getEnvelope is " + delivery.getEnvelope());
                 System.out.println("delivery.getProperties is " + delivery.getProperties());
+                String message = new String(delivery.getBody());
+                System.out.println("delivery.getBody is " + message);
 
 
-                try {
-                    Thread.sleep(1000L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+//                try {
+//                    Thread.sleep(1000L);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+
+                if (message.equals("[Msg]5")) {
+                    channel.basicCancel(consumerTag);
+                    System.out.println("channel.basicCancel!");
                 }
 
                 if (message.equals("[Msg]9")) {
                     try {
+                        System.out.println("channel.close!");
                         channel.close();
                     } catch (TimeoutException e) {
                         e.printStackTrace();
                     }
                 }
-
-                if (message.equals("[Msg]5")) {
-                    channel.basicCancel("basic.cancel");
-                }
-
             };
 
-            CancelCallback cancelCallback = consumerTag->{
+            CancelCallback cancelCallback = consumerTag -> {
                 System.out.println("~~cancelCallback~~");
                 System.out.println("consumerTag is " + consumerTag);
                 System.out.println(Thread.currentThread());
@@ -210,6 +257,13 @@ public class QueueTrial {
                     cancelCallback,
                     consumerShutdownSignalCallback);
             System.out.println(consumerTag);
+
+//            try {
+//                Thread.sleep(3000L);
+//                channel.basicCancel(consumerTag);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
 
         } catch (IOException e) {
             e.printStackTrace();
