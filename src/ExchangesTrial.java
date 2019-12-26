@@ -8,8 +8,13 @@ import java.util.concurrent.TimeoutException;
  */
 public class ExchangesTrial {
 
-    private final String QUEUE = "qone";
-    private final String  EXCHANGE = "eone";
+    private final String E_TOPIC = "eTopic";
+    private final String E_Fanout = "eFanout";
+    private final String E_DIRECT = "eDirect";
+
+    private final String Q_ONE = "qOne";
+    private final String Q_TWO = "qTwo";
+
 
     private String userName = "guest";
     private String password = "guest";
@@ -24,68 +29,40 @@ public class ExchangesTrial {
 
         ConnectionFactory connectionFactory = exchangesTrial.getFactory();
 
-        exchangesTrial.receive(connectionFactory);
-//        exchangesTrial.send(connectionFactory);
+
+//        exchangesTrial.topicReceive(connectionFactory);
+//        exchangesTrial.topicSend(connectionFactory);
 
 
-        exchangesTrial.sendTopic(connectionFactory);
+        exchangesTrial.directReceive(connectionFactory);
+        exchangesTrial.directSend(connectionFactory);
 
 
-    }
-
-    private void sendTopic(ConnectionFactory connectionFactory) {
-
-
-        try (Connection connection = connectionFactory.newConnection();
-             Channel channel = connection.createChannel()) {
-            System.out.println(channel);
-
-
-
-            channel.exchangeDeclare(EXCHANGE, "topic");
-//            channel.queueDeclare(QUEUE, false, false, false, null);
-//            channel.queueBind(QUEUE, EXCHANGE, routingKey);
-
-
-            String routingKey = "rrr.xy.y.xx";
-            for (int i = 0; i < 10; i++) {
-                String message = "[Msg]" + i;
-                channel.basicPublish(EXCHANGE, routingKey, null, message.getBytes());
-//                channel.basicPublish("", QUEUE, null, message.getBytes());
-            }
-
-
-        } catch (TimeoutException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
+//        exchangesTrial.fanoutReceive(connectionFactory);
+//        exchangesTrial.fanoutSend(connectionFactory);
 
     }
 
-    private void receive(ConnectionFactory connectionFactory) {
+
+    private void directReceive(ConnectionFactory connectionFactory) {
 
         try {
             Connection connection = connectionFactory.newConnection();
             Channel channel = connection.createChannel();
-            channel.basicQos(1);//流速控制
+
 
             System.out.println(channel);
 
-            String routingKey = "rrr.#.xx";
-
-//            channel.exchangeDeclare(EXCHANGE, "fanout");
-            channel.queueDeclare(QUEUE, false, false, false, null);
-            channel.queueBind(QUEUE, EXCHANGE, routingKey);
+            channel.exchangeDeclare(E_DIRECT, "direct");
+            channel.queueDeclare(Q_ONE, false, false, false, null);
+            channel.queueBind(Q_ONE, E_DIRECT, "ddd");
 
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 System.out.println("~~deliverCallback~~");
                 System.out.println(Thread.currentThread());
                 System.out.println("consumerTag is " + consumerTag);
-                String message = new String(delivery.getBody(), "UTF-8");
+                String message = new String(delivery.getBody());
                 System.out.println("delivery.getBody is " + message);
                 System.out.println("delivery.getEnvelope is " + delivery.getEnvelope());
                 System.out.println("delivery.getProperties is " + delivery.getProperties());
@@ -114,8 +91,8 @@ public class ExchangesTrial {
 
             CancelCallback cancelCallback = consumerTag->{
                 System.out.println("~~cancelCallback~~");
-                System.out.println("consumerTag is " + consumerTag);
                 System.out.println(Thread.currentThread());
+                System.out.println("consumerTag is " + consumerTag);
             };
 
 
@@ -131,7 +108,7 @@ public class ExchangesTrial {
                 }
             };
 
-            String consumerTag = channel.basicConsume(QUEUE, true,
+            String consumerTag = channel.basicConsume("qOne", true,
                     deliverCallback,
                     cancelCallback,
                     consumerShutdownSignalCallback);
@@ -146,26 +123,213 @@ public class ExchangesTrial {
 
     }
 
-    private void send(ConnectionFactory connectionFactory) {
+    private void fanoutReceive(ConnectionFactory connectionFactory) {
+
+        try {
+            Connection connection = connectionFactory.newConnection();
+            Channel channel = connection.createChannel();
+
+
+            System.out.println(channel);
+
+            channel.exchangeDeclare(E_Fanout, "fanout");
+            channel.queueDeclare(Q_ONE, false, false, false, null);
+            channel.queueBind(Q_ONE, E_Fanout, "rrr.#");
+
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                System.out.println("~~deliverCallback~~");
+                System.out.println(Thread.currentThread());
+                System.out.println("consumerTag is " + consumerTag);
+                String message = new String(delivery.getBody());
+                System.out.println("delivery.getBody is " + message);
+                System.out.println("delivery.getEnvelope is " + delivery.getEnvelope());
+                System.out.println("delivery.getProperties is " + delivery.getProperties());
+
+
+//                try {
+//                    Thread.sleep(1000L);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+
+//                if (message.equals("[Msg]5")) {
+//                    channel.basicCancel("basic.cancel");
+//                }
+
+                if (message.equals("[Msg]9")) {
+                    try {
+                        channel.close();
+                    } catch (TimeoutException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+
+            };
+
+            CancelCallback cancelCallback = consumerTag->{
+                System.out.println("~~cancelCallback~~");
+                System.out.println(Thread.currentThread());
+                System.out.println("consumerTag is " + consumerTag);
+            };
+
+
+            ConsumerShutdownSignalCallback consumerShutdownSignalCallback = (consumerTag, sig) -> {
+                System.out.println("~~consumerShutdownSignalCallback~~");
+                System.out.println("consumerTag is " + consumerTag);
+                System.out.println("sig is " + sig);
+                System.out.println(Thread.currentThread());
+                try {
+                    connection.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            };
+
+            String consumerTag = channel.basicConsume("qOne", true,
+                    deliverCallback,
+                    cancelCallback,
+                    consumerShutdownSignalCallback);
+            System.out.println(consumerTag);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+private void topicReceive(ConnectionFactory connectionFactory) {
+
+        try {
+            Connection connection = connectionFactory.newConnection();
+            Channel channel = connection.createChannel();
+
+
+            System.out.println(channel);
+
+            channel.exchangeDeclare(E_TOPIC, "topic");
+            channel.queueDeclare(Q_ONE, false, false, false, null);
+            channel.queueBind(Q_ONE, E_TOPIC, "rrr.#");
+
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                System.out.println("~~deliverCallback~~");
+                System.out.println(Thread.currentThread());
+                System.out.println("consumerTag is " + consumerTag);
+                String message = new String(delivery.getBody());
+                System.out.println("delivery.getBody is " + message);
+                System.out.println("delivery.getEnvelope is " + delivery.getEnvelope());
+                System.out.println("delivery.getProperties is " + delivery.getProperties());
+
+
+//                try {
+//                    Thread.sleep(1000L);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+
+//                if (message.equals("[Msg]5")) {
+//                    channel.basicCancel("basic.cancel");
+//                }
+
+                if (message.equals("[Msg]9")) {
+                    try {
+                        channel.close();
+                    } catch (TimeoutException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+
+            };
+
+            CancelCallback cancelCallback = consumerTag->{
+                System.out.println("~~cancelCallback~~");
+                System.out.println(Thread.currentThread());
+                System.out.println("consumerTag is " + consumerTag);
+            };
+
+
+            ConsumerShutdownSignalCallback consumerShutdownSignalCallback = (consumerTag, sig) -> {
+                System.out.println("~~consumerShutdownSignalCallback~~");
+                System.out.println("consumerTag is " + consumerTag);
+                System.out.println("sig is " + sig);
+                System.out.println(Thread.currentThread());
+                try {
+                    connection.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            };
+
+            String consumerTag = channel.basicConsume("qOne", true,
+                    deliverCallback,
+                    cancelCallback,
+                    consumerShutdownSignalCallback);
+            System.out.println(consumerTag);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private void directSend(ConnectionFactory connectionFactory) {
 
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {
             System.out.println(channel);
 
-
-
-            channel.exchangeDeclare(EXCHANGE, "fanout");
-//            channel.queueDeclare(QUEUE, false, false, false, null);
-//            channel.queueBind(QUEUE, EXCHANGE, routingKey);
-
-
-            String routingKey = "rrr";
             for (int i = 0; i < 10; i++) {
                 String message = "[Msg]" + i;
-                channel.basicPublish(EXCHANGE, routingKey, null, message.getBytes());
-//                channel.basicPublish("", QUEUE, null, message.getBytes());
+                channel.basicPublish(E_DIRECT, "ddd", null, message.getBytes());
             }
 
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void fanoutSend(ConnectionFactory connectionFactory) {
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
+
+            for (int i = 0; i < 10; i++) {
+                String message = "[Msg]" + i;
+                channel.basicPublish(E_Fanout, "rdo", null, message.getBytes());
+            }
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void topicSend(ConnectionFactory connectionFactory) {
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
+
+            for (int i = 0; i < 10; i++) {
+                String message = "[Msg]" + i;
+                channel.basicPublish(E_TOPIC, "rrr", null, message.getBytes());
+//                channel.basicPublish(E_TOPIC, "rrtr", null, message.getBytes());
+            }
 
         } catch (TimeoutException e) {
             e.printStackTrace();
