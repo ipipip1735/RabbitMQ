@@ -96,11 +96,6 @@ public class QueueTrial {
                     System.out.println(Thread.currentThread());
                     System.out.println("consumerTag is " + consumerTag);
 
-                    try {
-                        connection.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
 
                 @Override
@@ -112,7 +107,7 @@ public class QueueTrial {
                     System.out.println("properties is " + properties);
                     System.out.println("body is " + new String(body));
 
-//                    if (envelope.getDeliveryTag() == 5) channel.basicCancel(consumerTag);
+                    if (envelope.getDeliveryTag() == 5) channel.basicCancel(consumerTag);
 
                     if (envelope.getDeliveryTag() == 10) {
                         try {
@@ -281,8 +276,11 @@ public class QueueTrial {
 
             channel.queueDeclare(QUEUE, false, false, false, null);
 
-            for (int i = 0; i < 10; i++) {
+//            String queueName =  channel.queueDeclare().getQueue();//声明临时队列
+//            System.out.println("queueName is " + queueName);
 
+
+            for (int i = 0; i < 10; i++) {
 //                String message = "[Msg]" + new Random().nextInt(100);
                 String message = "[Msg]" + i;
                 channel.basicPublish("", QUEUE, null, message.getBytes());
