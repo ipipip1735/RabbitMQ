@@ -34,12 +34,12 @@ public class ExchangesTrial {
 //        exchangesTrial.topicSend(connectionFactory);
 
 
-        exchangesTrial.directReceive(connectionFactory);
-        exchangesTrial.directSend(connectionFactory);
+//        exchangesTrial.directReceive(connectionFactory);
+//        exchangesTrial.directSend(connectionFactory);
 
 
-//        exchangesTrial.fanoutReceive(connectionFactory);
-//        exchangesTrial.fanoutSend(connectionFactory);
+        exchangesTrial.fanoutReceive(connectionFactory);
+        exchangesTrial.fanoutSend(connectionFactory);
 
     }
 
@@ -108,11 +108,10 @@ public class ExchangesTrial {
                 }
             };
 
-            String consumerTag = channel.basicConsume("qOne", true,
+            channel.basicConsume(Q_ONE, true,
                     deliverCallback,
                     cancelCallback,
                     consumerShutdownSignalCallback);
-            System.out.println(consumerTag);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -187,7 +186,7 @@ public class ExchangesTrial {
                 }
             };
 
-            String consumerTag = channel.basicConsume("qOne", true,
+            String consumerTag = channel.basicConsume(Q_ONE, true,
                     deliverCallback,
                     cancelCallback,
                     consumerShutdownSignalCallback);
@@ -266,7 +265,7 @@ private void topicReceive(ConnectionFactory connectionFactory) {
                 }
             };
 
-            String consumerTag = channel.basicConsume("qOne", true,
+            String consumerTag = channel.basicConsume(Q_ONE, true,
                     deliverCallback,
                     cancelCallback,
                     consumerShutdownSignalCallback);
