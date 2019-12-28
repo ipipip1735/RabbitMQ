@@ -207,15 +207,23 @@ public class QueueTrial {
                 System.out.println("delivery.getBody is " + message);
 
 
-//                try {
-//                    Thread.sleep(1000L);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
+                try {
+                    Thread.sleep(1000L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 if (message.equals("[Msg]5")) {
-                    channel.basicCancel(consumerTag);
-                    System.out.println("channel.basicCancel!");
+                    //方式一
+//                    channel.basicCancel(consumerTag);//取消接收
+////                    channel.queuePurge(QUEUE);//清空队列
+//                    System.out.println("channel.basicCancel!");
+//                    connection.close();//关闭连接
+
+                    //方式二
+                    channel.queueDelete(QUEUE);//删除队列
+                } else {
+                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
                 }
 
                 if (message.equals("[Msg]9")) {
@@ -226,12 +234,20 @@ public class QueueTrial {
                         e.printStackTrace();
                     }
                 }
+
+
             };
 
             CancelCallback cancelCallback = consumerTag -> {
                 System.out.println("~~cancelCallback~~");
                 System.out.println("consumerTag is " + consumerTag);
                 System.out.println(Thread.currentThread());
+
+                try {
+                    connection.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             };
 
 
@@ -247,7 +263,7 @@ public class QueueTrial {
                 }
             };
 
-            String consumerTag = channel.basicConsume(QUEUE, true,
+            String consumerTag = channel.basicConsume(QUEUE, false,
                     deliverCallback,
                     cancelCallback,
                     consumerShutdownSignalCallback);
@@ -275,6 +291,8 @@ public class QueueTrial {
             System.out.println(channel);
 
             channel.queueDeclare(QUEUE, false, false, false, null);
+            channel.queuePurge(QUEUE);
+
 
 //            String queueName =  channel.queueDeclare().getQueue();//声明临时队列
 //            System.out.println("queueName is " + queueName);
