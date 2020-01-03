@@ -32,8 +32,8 @@ public class QueueTrial {
         queueTrial.send(connectionFactory);
 //        queueTrial.sendDurable(connectionFactory);
 
-        queueTrial.receive(connectionFactory);
-//        queueTrial.receiveWithDefaultConsumer(connectionFactory);
+//        queueTrial.receive(connectionFactory);
+        queueTrial.receiveWithDefaultConsumer(connectionFactory);
     }
 
     private void receiveWithDefaultConsumer(ConnectionFactory connectionFactory) {
@@ -42,7 +42,7 @@ public class QueueTrial {
         try {
             Connection connection = connectionFactory.newConnection();
             Channel channel = connection.createChannel();
-            channel.basicQos(2);//流速控制
+            channel.basicQos(1);//流速控制
             System.out.println(channel);
 
             channel.queueDeclare(QUEUE, false, false, false, null);
@@ -95,7 +95,6 @@ public class QueueTrial {
                     System.out.println("~~handleRecoverOk~~");
                     System.out.println(Thread.currentThread());
                     System.out.println("consumerTag is " + consumerTag);
-
                 }
 
                 @Override
@@ -108,13 +107,14 @@ public class QueueTrial {
                     System.out.println("body is " + new String(body));
 
                     if (envelope.getDeliveryTag() == 5) channel.basicCancel(consumerTag);
-
                     if (envelope.getDeliveryTag() == 10) {
                         try {
                             channel.close();
                         } catch (TimeoutException e) {
                             e.printStackTrace();
                         }
+                    } else {
+                        channel.basicAck(envelope.getDeliveryTag(), false);//手动确认
                     }
 
 //                    try {
@@ -126,7 +126,7 @@ public class QueueTrial {
                 }
             };
 
-            String consumerTag = channel.basicConsume(QUEUE, true, consumer);
+            String consumerTag = channel.basicConsume(QUEUE, false, consumer);
             System.out.println("consumerTag is " + consumerTag);
 
 
@@ -208,34 +208,61 @@ public class QueueTrial {
 
 
                 try {
-                    Thread.sleep(1000L);
+                    Thread.sleep(100L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 
-                if (message.equals("[Msg]5")) {
-                    //方式一
-//                    channel.basicCancel(consumerTag);//取消接收
-////                    channel.queuePurge(QUEUE);//清空队列
-//                    System.out.println("channel.basicCancel!");
-//                    connection.close();//关闭连接
 
-                    //方式二
-                    channel.queueDelete(QUEUE);//删除队列
+//                if (message.equals("[Msg]3")) {
+//                    try {
+//                        System.out.println("channel.close!");
+//                        channel.close();//关闭通道
+//                    } catch (TimeoutException e) {
+//                        e.printStackTrace();
+//                    }
+//                } else {
+//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
+//                }
+
+
+                if (message.equals("[Msg]4")) {
+                    channel.basicCancel(consumerTag);
+                    System.out.println("channel.close!");
+                    connection.close();//关闭连接
                 } else {
                     channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
                 }
 
-                if (message.equals("[Msg]9")) {
-                    try {
-                        System.out.println("channel.close!");
-                        channel.close();
-                    } catch (TimeoutException e) {
-                        e.printStackTrace();
-                    }
-                }
 
+//                if (message.equals("[Msg]5")) {
+//                    channel.queuePurge(QUEUE);//清空队列
+//                    System.out.println("channel.queuePurge!");
+//                    try {
+//                        System.out.println("channel.close!");
+//                        channel.close();//关闭通道
+//                    } catch (TimeoutException e) {
+//                        e.printStackTrace();
+//                    }
+//                } else {
+//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
+//                }
 
+//                if (message.equals("[Msg]7")) {
+//                    channel.queueDelete(QUEUE);//删除队列
+//                    System.out.println("channel.queueDelete!");
+//                } else {
+//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
+//                }
+
+//                if (message.equals("[Msg]9")) {
+//                    try {
+//                        System.out.println("channel.close!");
+//                        channel.close();
+//                    } catch (TimeoutException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
             };
 
             CancelCallback cancelCallback = consumerTag -> {
