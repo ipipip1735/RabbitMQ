@@ -33,7 +33,29 @@ public class QueueTrial {
 //        queueTrial.sendDurable(connectionFactory);
 
 //        queueTrial.receive(connectionFactory);
-        queueTrial.receiveWithDefaultConsumer(connectionFactory);
+//        queueTrial.receiveWithDefaultConsumer(connectionFactory);
+
+//        queueTrial.pull(connectionFactory);
+    }
+
+    private void pull(ConnectionFactory connectionFactory) {
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+
+            GetResponse getResponse = channel.basicGet(QUEUE, true);
+            System.out.println(getResponse);
+            System.out.println("getBody is " + getResponse.getBody().length);
+            System.out.println("getEnvelope is " + getResponse.getEnvelope());
+            System.out.println("getMessageCount is " + getResponse.getMessageCount());
+            System.out.println("getProps is " + getResponse.getProps());
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
     }
 
     private void receiveWithDefaultConsumer(ConnectionFactory connectionFactory) {
@@ -45,7 +67,7 @@ public class QueueTrial {
             channel.basicQos(1);//流速控制
             System.out.println(channel);
 
-            channel.queueDeclare(QUEUE, false, false, false, null);
+            channel.queueDeclare(QUEUE, false, false, false, null);//声明队列
 
 
             Consumer consumer = new DefaultConsumer(channel) {
@@ -315,17 +337,24 @@ public class QueueTrial {
 
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {
+
             System.out.println(channel);
 
-            channel.queueDeclare(QUEUE, false, false, false, null);
-            channel.queuePurge(QUEUE);
+            //方式一：手动设置队列名
+            AMQP.Queue.DeclareOk declareOk =  channel.queueDeclare(QUEUE, false, false, false, null);//声明队列
+            System.out.println(declareOk);
+
+            //方式二：自动生成队列名（队列名为空，那么RabbitMQ将创建一个随机字符串作为队列名）
+//            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare("", false, false, false, null);//指定队列名
+//            System.out.println(declareOk);
 
 
-//            String queueName =  channel.queueDeclare().getQueue();//声明临时队列
+            //方式三：使用临时队列
+//            String queueName =  channel.queueDeclare().getQueue();//声明临时队列（断链后队列被自动删除）
 //            System.out.println("queueName is " + queueName);
 
 
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 30; i++) {
 //                String message = "[Msg]" + new Random().nextInt(100);
                 String message = "[Msg]" + i;
                 channel.basicPublish("", QUEUE, null, message.getBytes());
