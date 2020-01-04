@@ -1,6 +1,8 @@
 import com.rabbitmq.client.*;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -11,6 +13,7 @@ public class ExchangesTrial {
     private final String E_TOPIC = "eTopic";
     private final String E_Fanout = "eFanout";
     private final String E_DIRECT = "eDirect";
+    private final String E_HEADER = "eHeader";
 
     private final String Q_ONE = "qOne";
     private final String Q_TWO = "qTwo";
@@ -38,8 +41,123 @@ public class ExchangesTrial {
 //        exchangesTrial.directSend(connectionFactory);
 
 
-        exchangesTrial.fanoutReceive(connectionFactory);
-        exchangesTrial.fanoutSend(connectionFactory);
+//        exchangesTrial.fanoutReceive(connectionFactory);
+//        exchangesTrial.fanoutSend(connectionFactory);
+
+
+        exchangesTrial.headerReceive(connectionFactory);
+        exchangesTrial.headerSend(connectionFactory);
+
+    }
+
+    private void headerSend(ConnectionFactory connectionFactory) {
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+
+            System.out.println(channel);
+
+
+            channel.exchangeDeclare(E_HEADER, "headers");
+            channel.queueDeclare(Q_ONE, false, false, false, null);
+
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("x-match", "any");
+            map.put("xxx", "yyy");
+            channel.queueBind(Q_ONE, E_HEADER, "ddd", map);
+
+
+            AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties.Builder();
+
+            Map<String, Object> pros = new HashMap<>();
+            pros.put("xxx", "yyy");
+            AMQP.BasicProperties basicProperties = builder.headers(pros).build();
+
+
+            for (int i = 0; i < 10; i++) {
+                String message = "[Msg]" + i;
+                channel.basicPublish(E_HEADER, "rdo", basicProperties, message.getBytes());
+            }
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    private void headerReceive(ConnectionFactory connectionFactory) {
+
+        try {
+            Connection connection = connectionFactory.newConnection();
+            Channel channel = connection.createChannel();
+
+
+            System.out.println(channel);
+
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                System.out.println("~~deliverCallback~~");
+                System.out.println(Thread.currentThread());
+                System.out.println("consumerTag is " + consumerTag);
+                String message = new String(delivery.getBody());
+                System.out.println("delivery.getBody is " + message);
+                System.out.println("delivery.getEnvelope is " + delivery.getEnvelope());
+                System.out.println("delivery.getProperties is " + delivery.getProperties());
+
+
+//                try {
+//                    Thread.sleep(1000L);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+
+//                if (message.equals("[Msg]5")) {
+//                    channel.basicCancel("basic.cancel");
+//                }
+
+                if (message.equals("[Msg]9")) {
+                    try {
+                        channel.close();
+                    } catch (TimeoutException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            };
+
+            CancelCallback cancelCallback = consumerTag -> {
+                System.out.println("~~cancelCallback~~");
+                System.out.println(Thread.currentThread());
+                System.out.println("consumerTag is " + consumerTag);
+            };
+
+            ConsumerShutdownSignalCallback consumerShutdownSignalCallback = (consumerTag, sig) -> {
+                System.out.println("~~consumerShutdownSignalCallback~~");
+                System.out.println("consumerTag is " + consumerTag);
+                System.out.println("sig is " + sig);
+                System.out.println(Thread.currentThread());
+                try {
+                    connection.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            };
+
+            channel.basicConsume(Q_ONE, true,
+                    deliverCallback,
+                    cancelCallback,
+                    consumerShutdownSignalCallback);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+
 
     }
 
@@ -89,7 +207,7 @@ public class ExchangesTrial {
 
             };
 
-            CancelCallback cancelCallback = consumerTag->{
+            CancelCallback cancelCallback = consumerTag -> {
                 System.out.println("~~cancelCallback~~");
                 System.out.println(Thread.currentThread());
                 System.out.println("consumerTag is " + consumerTag);
@@ -167,7 +285,7 @@ public class ExchangesTrial {
 
             };
 
-            CancelCallback cancelCallback = consumerTag->{
+            CancelCallback cancelCallback = consumerTag -> {
                 System.out.println("~~cancelCallback~~");
                 System.out.println(Thread.currentThread());
                 System.out.println("consumerTag is " + consumerTag);
@@ -201,7 +319,7 @@ public class ExchangesTrial {
 
     }
 
-private void topicReceive(ConnectionFactory connectionFactory) {
+    private void topicReceive(ConnectionFactory connectionFactory) {
 
         try {
             Connection connection = connectionFactory.newConnection();
@@ -246,7 +364,7 @@ private void topicReceive(ConnectionFactory connectionFactory) {
 
             };
 
-            CancelCallback cancelCallback = consumerTag->{
+            CancelCallback cancelCallback = consumerTag -> {
                 System.out.println("~~cancelCallback~~");
                 System.out.println(Thread.currentThread());
                 System.out.println("consumerTag is " + consumerTag);
