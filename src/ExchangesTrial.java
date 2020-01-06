@@ -14,6 +14,7 @@ public class ExchangesTrial {
     private final String E_Fanout = "eFanout";
     private final String E_DIRECT = "eDirect";
     private final String E_HEADER = "eHeader";
+    private final String E_ONE = "eOne";
 
     private final String Q_ONE = "qOne";
     private final String Q_TWO = "qTwo";
@@ -33,21 +34,36 @@ public class ExchangesTrial {
         ConnectionFactory connectionFactory = exchangesTrial.getFactory();
 
 
-//        exchangesTrial.topicReceive(connectionFactory);
-//        exchangesTrial.topicSend(connectionFactory);
+        //交换属性
+        exchangesTrial.create(connectionFactory);
 
 
-//        exchangesTrial.directReceive(connectionFactory);
-//        exchangesTrial.directSend(connectionFactory);
 
-
+        //扇出交换
 //        exchangesTrial.fanoutReceive(connectionFactory);
 //        exchangesTrial.fanoutSend(connectionFactory);
 
 
-        exchangesTrial.headerReceive(connectionFactory);
-        exchangesTrial.headerSend(connectionFactory);
+        //话题交换
+//        exchangesTrial.topicReceive(connectionFactory);
+//        exchangesTrial.topicSend(connectionFactory);
 
+
+        //直接交换
+//        exchangesTrial.directReceive(connectionFactory);
+//        exchangesTrial.directSend(connectionFactory);
+
+
+        //头信息交换
+//        exchangesTrial.headerReceive(connectionFactory);
+//        exchangesTrial.headerSend(connectionFactory);
+    }
+
+    private void create(ConnectionFactory connectionFactory) {
+
+            try (Connection connection = connectionFactory.newConnection();
+                 Channel channel = connection.createChannel()) {
+                System.out.println(channel);
 
 
     }
