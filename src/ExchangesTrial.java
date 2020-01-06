@@ -38,7 +38,6 @@ public class ExchangesTrial {
         exchangesTrial.create(connectionFactory);
 
 
-
         //扇出交换
 //        exchangesTrial.fanoutReceive(connectionFactory);
 //        exchangesTrial.fanoutSend(connectionFactory);
@@ -66,6 +65,31 @@ public class ExchangesTrial {
                 System.out.println(channel);
 
 
+                //方式一：自动删除交换(所有队列解绑后，自动删除)
+//                channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, true, null);//声明自动删除交换
+//                channel.queueDeclare(Q_ONE, false, false, false, null);
+//                channel.queueBind(Q_ONE, E_ONE, "one");//绑定队列
+////                channel.queueUnbind(Q_ONE, E_ONE, "one");//解绑队，由于交换只绑定了一个队列，所以解绑后将自动删除交换
+
+
+
+
+                //方式二：增加可选参数
+                Map<String, Object> map = new HashMap<>();
+                map.put("xxx", "yyy");
+//                map.put("aaa", "bbbb");
+
+                channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, false, map);
+                channel.queueDeclare(Q_ONE, false, false, false, null);
+                channel.queueBind(Q_ONE, E_ONE, "one");
+
+
+
+            } catch (TimeoutException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
     }
 
     private void headerSend(ConnectionFactory connectionFactory) {
@@ -78,7 +102,6 @@ public class ExchangesTrial {
 
             channel.exchangeDeclare(E_HEADER, "headers");
             channel.queueDeclare(Q_ONE, false, false, false, null);
-
 
             Map<String, Object> map = new HashMap<>();
             map.put("x-match", "any");
@@ -480,7 +503,7 @@ public class ExchangesTrial {
 //        factory.setUsername(userName);
 //        factory.setPassword(password);
 //        factory.setVirtualHost(virtualHost);
-        factory.setHost(host);
+//        factory.setHost(host);
 //        factory.setPort(port);
 
 //        try {
