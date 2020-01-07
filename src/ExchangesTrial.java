@@ -15,6 +15,7 @@ public class ExchangesTrial {
     private final String E_DIRECT = "eDirect";
     private final String E_HEADER = "eHeader";
     private final String E_ONE = "eOne";
+    private final String E_TWO = "eTwo";
 
     private final String Q_ONE = "qOne";
     private final String Q_TWO = "qTwo";
@@ -60,36 +61,42 @@ public class ExchangesTrial {
 
     private void create(ConnectionFactory connectionFactory) {
 
-            try (Connection connection = connectionFactory.newConnection();
-                 Channel channel = connection.createChannel()) {
-                System.out.println(channel);
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
 
 
-                //方式一：自动删除交换(所有队列解绑后，自动删除)
+            //方式一：自动删除交换(所有队列解绑后，自动删除)
 //                channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, true, null);//声明自动删除交换
 //                channel.queueDeclare(Q_ONE, false, false, false, null);
 //                channel.queueBind(Q_ONE, E_ONE, "one");//绑定队列
-////                channel.queueUnbind(Q_ONE, E_ONE, "one");//解绑队，由于交换只绑定了一个队列，所以解绑后将自动删除交换
+//                channel.queueUnbind(Q_ONE, E_ONE, "one");//解绑队，由于交换只绑定了一个队列，所以解绑后将自动删除交换
+
+
+            //方式二：增加可选参数
+//                Map<String, Object> map = new HashMap<>();
+//                map.put("xxx", "yyy");
+////                map.put("aaa", "bbbb");
+//
+//                channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, false, map);
+//                channel.queueDeclare(Q_ONE, false, false, false, null);
+//                channel.queueBind(Q_ONE, E_ONE, "one");
+
+
+            //方式三：使用策略
+//                channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, false, null);
+
+//            Map<String, Object> map = new HashMap<>();
+//            map.put("x-max-length", 1048576);
+//            channel.exchangeDeclare(E_TWO, BuiltinExchangeType.DIRECT, false, false, map);
 
 
 
-
-                //方式二：增加可选参数
-                Map<String, Object> map = new HashMap<>();
-                map.put("xxx", "yyy");
-//                map.put("aaa", "bbbb");
-
-                channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, false, map);
-                channel.queueDeclare(Q_ONE, false, false, false, null);
-                channel.queueBind(Q_ONE, E_ONE, "one");
-
-
-
-            } catch (TimeoutException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void headerSend(ConnectionFactory connectionFactory) {

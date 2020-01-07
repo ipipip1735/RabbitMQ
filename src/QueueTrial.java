@@ -5,6 +5,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
@@ -35,7 +37,7 @@ public class QueueTrial {
 //        queueTrial.receive(connectionFactory);
 //        queueTrial.receiveWithDefaultConsumer(connectionFactory);
 
-        queueTrial.pull(connectionFactory);
+//        queueTrial.pull(connectionFactory);
     }
 
     private void pull(ConnectionFactory connectionFactory) {
@@ -353,11 +355,11 @@ public class QueueTrial {
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {
 
-            System.out.println(channel);
+//            System.out.println(channel);
 
             //方式一：手动设置队列名
-            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, false, false, false, null);//声明队列
-            System.out.println(declareOk);
+//            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, false, false, false, null);//声明队列
+//            System.out.println(declareOk);
 
             //方式二：自动生成队列名（队列名为空，那么RabbitMQ将创建一个随机字符串作为队列名）
 //            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare("", false, false, false, null);//指定队列名
@@ -369,6 +371,16 @@ public class QueueTrial {
 //            System.out.println("queueName is " + queueName);
 
 
+            //方式三：使用专属队列
+            channel.queueDeclare(QUEUE, false, true, false, null);
+
+
+            //方式四：设置队列特性（官方把X参数称为队列拥有的特性）
+//            Map<String, Object> args = new HashMap<String, Object>();
+//            args.put("x-max-length", 10);
+//            channel.queueDeclare("qOne", false, false, false, args);
+
+
             for (int i = 0; i < 30; i++) {
 //                String message = "[Msg]" + new Random().nextInt(100);
                 String message = "[Msg]" + i;
@@ -376,10 +388,13 @@ public class QueueTrial {
             }
 
 
+
+
         } catch (TimeoutException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 }
