@@ -65,8 +65,6 @@ public class QueueTrial {
             channel.basicAck(getResponse.getEnvelope().getDeliveryTag(), false);
 
 
-
-
         } catch (IOException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {
@@ -208,7 +206,7 @@ public class QueueTrial {
 //        factory.setPassword(password);
 //        factory.setVirtualHost(virtualHost);
 //        factory.setPort(port);
-        factory.setHost(host);
+//        factory.setHost(host);
 
 
 //        try {
@@ -234,7 +232,7 @@ public class QueueTrial {
 
             System.out.println(channel);
 
-            channel.queueDeclare(QUEUE, false, false, false, null);
+//            channel.queueDeclare(QUEUE, false, false, false, null);
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 System.out.println("~~deliverCallback~~");
@@ -267,7 +265,8 @@ public class QueueTrial {
 
                 if (message.equals("[Msg]4")) {
                     channel.basicCancel(consumerTag);
-                    System.out.println("channel.close!");
+                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
+                    System.out.println("channel.basicCancel!");
                     connection.close();//关闭连接
                 } else {
                     channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
@@ -352,18 +351,22 @@ public class QueueTrial {
 
     private void send(ConnectionFactory connectionFactory) {
 
-        try (Connection connection = connectionFactory.newConnection();
-             Channel channel = connection.createChannel()) {
+        try(Connection connection = connectionFactory.newConnection();
+            Channel channel = connection.createChannel())  {
 
 //            System.out.println(channel);
 
             //方式一：手动设置队列名
-//            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, false, false, false, null);//声明队列
-//            System.out.println(declareOk);
+            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, false, false, false, null);//声明队列
+            System.out.println(declareOk);
+            System.out.println("getQueue is " + declareOk.getQueue());
+            System.out.println("getMessageCount is " + declareOk.getMessageCount());
+            System.out.println("getConsumerCount is " + declareOk.getConsumerCount());
 
-            //方式二：自动生成队列名（队列名为空，那么RabbitMQ将创建一个随机字符串作为队列名）
+            //方式二：自动生成队列名（队列名为空，那么RabbitMQ将创建一个随机字符串作为队列名，通道就要）
 //            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare("", false, false, false, null);//指定队列名
 //            System.out.println(declareOk);
+//            channel.queueBind("", "amq.direct", "one");//给内置交换绑定队列（每个虚拟主机都有7个内置交换）
 
 
             //方式三：使用临时队列
@@ -371,23 +374,39 @@ public class QueueTrial {
 //            System.out.println("queueName is " + queueName);
 
 
-            //方式三：使用专属队列
-            channel.queueDeclare(QUEUE, false, true, false, null);
+            //方式四：使用自动删除队列
+//            channel.queueDeclare(QUEUE, false, false, true, null);
 
 
-            //方式四：设置队列特性（官方把X参数称为队列拥有的特性）
+            //方式五：使用专属队列
+//            channel.queueDeclare(QUEUE, false, true, false, null);
+
+
+            //方式六：使用持久队列
+//            channel.queueDeclare(QUEUE, true, false, false, null);
+
+
+            //方式七：设置队列特性（官方把X参数称为队列拥有的特性）
 //            Map<String, Object> args = new HashMap<String, Object>();
-//            args.put("x-max-length", 10);
-//            channel.queueDeclare("qOne", false, false, false, args);
+////            args.put("x-max-length", 10);//设置队列长度
+////            args.put("x-max-priority", 10);//设置队列X参数最大个数
+//            args.put("x-queue-type", "quorum");//设置队列类型为法定人数队列
+//            channel.queueDeclare(QUEUE, true, false, false, args);//quorum必须为持久队列
 
+//            AMQP.BasicProperties props = new AMQP.BasicProperties().builder()
+//                    .deliveryMode(2)
+//                    .build();
 
-            for (int i = 0; i < 30; i++) {
+            for (int i = 0; i < 10; i++) {
 //                String message = "[Msg]" + new Random().nextInt(100);
                 String message = "[Msg]" + i;
+
+
                 channel.basicPublish("", QUEUE, null, message.getBytes());
+//                channel.basicPublish("amq.direct", "one", null, message.getBytes());//使用内置交换
+//                channel.basicPublish("", QUEUE, props, message.getBytes());//发送信息给持久队列
+
             }
-
-
 
 
         } catch (TimeoutException e) {

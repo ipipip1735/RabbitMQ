@@ -83,11 +83,11 @@ public class ExchangesTrial {
 //                channel.queueBind(Q_ONE, E_ONE, "one");
 
 
-            //方式三：使用策略
+            //方式三：使用特性（X参数就是特性）
 //                channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, false, null);
 
 //            Map<String, Object> map = new HashMap<>();
-//            map.put("x-max-length", 1048576);
+//            map.put("x-max-length", 1048576);//增加X参数
 //            channel.exchangeDeclare(E_TWO, BuiltinExchangeType.DIRECT, false, false, map);
 
 

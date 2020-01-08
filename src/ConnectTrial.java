@@ -30,11 +30,15 @@ public class ConnectTrial {
 
 
         ConnectionFactory factory = new ConnectionFactory();
-//        factory.setUsername(userName);
-//        factory.setPassword(password);
-//        factory.setVirtualHost(virtualHost);
-//        factory.setPort(port);
-        factory.setHost(host);
+//        //factory.setUsername(userName);
+//        //factory.setPassword(password);
+//        //factory.setVirtualHost(virtualHost);
+//        //factory.setPort(port);
+//        //factory.setHost(host);
+
+        factory.setRequestedChannelMax(10);
+//        //factory.setSslContextFactory(sslContext);
+
 
 //        try {
 //            URI uri = new URI("amqp://userName:password@hostName:portNumber/virtualHost");
@@ -48,9 +52,13 @@ public class ConnectTrial {
 //        }
 
 
-//        try (Connection connection = connectionFactory.newConnection();
-//             Channel channel = connection.createChannel()) {
-//
-//        }
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel()) {
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
