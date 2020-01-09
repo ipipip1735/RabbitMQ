@@ -23,8 +23,6 @@ public class QueueTrial {
     private int portTSL = 5671;
     private int port = 5672;
 
-    int n = 0;
-
     public static void main(String[] args) {
         QueueTrial queueTrial = new QueueTrial();
 
@@ -229,7 +227,7 @@ public class QueueTrial {
         try {
             Connection connection = connectionFactory.newConnection();
             Channel channel = connection.createChannel();
-            channel.basicQos(1);//流速控制
+            channel.basicQos(5);//流速控制
 
             System.out.println(channel);
 
@@ -305,12 +303,10 @@ public class QueueTrial {
 
 
                 //使用批量确认
-                if (++n > 4) {
+                if ( delivery.getEnvelope().getDeliveryTag() % 5 == 0) {
                     channel.basicAck(delivery.getEnvelope().getDeliveryTag(), true);
-                    System.out.println("Ack " + n + " is " + delivery.getEnvelope().getDeliveryTag());
-                    n = 0;
+                    System.out.println(delivery.getEnvelope().getDeliveryTag() + " ACK!");
                 }
-                System.out.println(n);
 
 
             };
