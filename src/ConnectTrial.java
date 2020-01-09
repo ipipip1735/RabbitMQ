@@ -20,10 +20,66 @@ public class ConnectTrial {
     public static void main(String[] args) {
         ConnectTrial connectTrial = new ConnectTrial();
 
-        connectTrial.connect();
+//        connectTrial.connect();
+//        connectTrial.addListener();
+        connectTrial.addProperties();
+
+
+    }
+
+    private void addProperties() {
+
+        ConnectionFactory factory = new ConnectionFactory();
+
+        System.out.println(factory.getClientProperties());
+
+
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel()) {
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 
+
+
+    private void addListener() {
+
+
+        ConnectionFactory factory = new ConnectionFactory();
+
+        try  {
+
+            Connection connection = factory.newConnection();
+            connection.addBlockedListener(new BlockedListener() {
+                @Override
+                public void handleBlocked(String reason) throws IOException {
+                    System.out.println("~~handleBlocked~~");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("reason is " + reason);
+                }
+
+                @Override
+                public void handleUnblocked() throws IOException {
+                    System.out.println("~~handleUnblocked~~");
+                    System.out.println(Thread.currentThread());
+
+                }
+            });
+
+            Channel channel = connection.createChannel();
+
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void connect() {

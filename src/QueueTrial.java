@@ -23,6 +23,7 @@ public class QueueTrial {
     private int portTSL = 5671;
     private int port = 5672;
 
+    int n = 0;
 
     public static void main(String[] args) {
         QueueTrial queueTrial = new QueueTrial();
@@ -34,7 +35,7 @@ public class QueueTrial {
         queueTrial.send(connectionFactory);
 //        queueTrial.sendDurable(connectionFactory);
 
-//        queueTrial.receive(connectionFactory);
+        queueTrial.receive(connectionFactory);
 //        queueTrial.receiveWithDefaultConsumer(connectionFactory);
 
 //        queueTrial.pull(connectionFactory);
@@ -263,14 +264,14 @@ public class QueueTrial {
 //                }
 
 
-                if (message.equals("[Msg]4")) {
-                    channel.basicCancel(consumerTag);
-                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
-                    System.out.println("channel.basicCancel!");
-                    connection.close();//关闭连接
-                } else {
-                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
-                }
+//                if (message.equals("[Msg]4")) {
+//                    channel.basicCancel(consumerTag);
+//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
+//                    System.out.println("channel.basicCancel!");
+//                    connection.close();//关闭连接
+//                } else {
+//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
+//                }
 
 
 //                if (message.equals("[Msg]5")) {
@@ -301,6 +302,17 @@ public class QueueTrial {
 //                        e.printStackTrace();
 //                    }
 //                }
+
+
+                //使用批量确认
+                if (++n > 4) {
+                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), true);
+                    System.out.println("Ack " + n + " is " + delivery.getEnvelope().getDeliveryTag());
+                    n = 0;
+                }
+                System.out.println(n);
+
+
             };
 
             CancelCallback cancelCallback = consumerTag -> {
@@ -351,8 +363,8 @@ public class QueueTrial {
 
     private void send(ConnectionFactory connectionFactory) {
 
-        try(Connection connection = connectionFactory.newConnection();
-            Channel channel = connection.createChannel())  {
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
 
 //            System.out.println(channel);
 
