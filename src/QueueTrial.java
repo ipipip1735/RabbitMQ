@@ -292,6 +292,7 @@ public class QueueTrial {
 //                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
 //                }
 
+
 //                if (message.equals("[Msg]9")) {
 //                    try {
 //                        System.out.println("channel.close!");
@@ -302,12 +303,25 @@ public class QueueTrial {
 //                }
 
 
-                //使用批量确认
-                if ( delivery.getEnvelope().getDeliveryTag() % 5 == 0) {
-                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), true);
-                    System.out.println(delivery.getEnvelope().getDeliveryTag() + " ACK!");
-                }
+//                if ( delivery.getEnvelope().getDeliveryTag() % 5 == 0) {
+//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), true);//使用批量肯定确认
+//                    System.out.println(delivery.getEnvelope().getDeliveryTag() + " ACK!");
+//                }
 
+
+//                if ( delivery.getEnvelope().getDeliveryTag() % 5 == 0) {
+//                    channel.basicNack(delivery.getEnvelope().getDeliveryTag(), true, true);//使用批量否定确认
+//                    System.out.println(delivery.getEnvelope().getDeliveryTag() + " Nack!");
+//                }
+
+
+//                if (delivery.getEnvelope().getDeliveryTag() == 3) {
+//                    channel.basicReject(delivery.getEnvelope().getDeliveryTag(), true);//使用批量确认
+//                    System.out.println(delivery.getEnvelope().getDeliveryTag() + " Reject!");
+//                } else {
+//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//使用批量确认
+//                    System.out.println(delivery.getEnvelope().getDeliveryTag() + " ACK!");
+//                }
 
             };
 
@@ -408,7 +422,6 @@ public class QueueTrial {
             for (int i = 0; i < 10; i++) {
 //                String message = "[Msg]" + new Random().nextInt(100);
                 String message = "[Msg]" + i;
-
 
                 channel.basicPublish("", QUEUE, null, message.getBytes());
 //                channel.basicPublish("amq.direct", "one", null, message.getBytes());//使用内置交换
