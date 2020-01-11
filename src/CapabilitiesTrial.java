@@ -125,11 +125,10 @@ public class CapabilitiesTrial {
     private ConnectionFactory getFactory() {
 
         ConnectionFactory factory = new ConnectionFactory();
-        System.out.println(factory.getClientProperties());
 
-        Map<String, Object> properties = factory.getClientProperties();
-        Map capabilities = (Map) properties.get("capabilities");
-        capabilities.put("consumer_cancel_notify", false);
+//        Map<String, Object> properties = factory.getClientProperties();
+//        Map capabilities = (Map) properties.get("capabilities");
+//        capabilities.put("consumer_cancel_notify", false);
 
         System.out.println(factory.getClientProperties());
 

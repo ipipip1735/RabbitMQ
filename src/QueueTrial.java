@@ -33,8 +33,8 @@ public class QueueTrial {
         queueTrial.send(connectionFactory);
 //        queueTrial.sendDurable(connectionFactory);
 
-//        queueTrial.receive(connectionFactory);
-        queueTrial.receiveWithDefaultConsumer(connectionFactory);
+        queueTrial.receive(connectionFactory);
+//        queueTrial.receiveWithDefaultConsumer(connectionFactory);
 
 //        queueTrial.pull(connectionFactory);
     }
@@ -232,8 +232,6 @@ public class QueueTrial {
 
             System.out.println(channel);
 
-//            channel.queueDeclare(QUEUE, false, false, false, null);
-
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 System.out.println("~~deliverCallback~~");
                 System.out.println(Thread.currentThread());
@@ -250,27 +248,18 @@ public class QueueTrial {
                     e.printStackTrace();
                 }
 
+                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
 
-//                if (message.equals("[Msg]3")) {
+//                if (message.equals("[Msg]3"))
 //                    try {
 //                        System.out.println("channel.close!");
 //                        channel.close();//关闭通道
 //                    } catch (TimeoutException e) {
 //                        e.printStackTrace();
 //                    }
-//                } else {
-//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
-//                }
 
 
-//                if (message.equals("[Msg]4")) {
-//                    channel.basicCancel(consumerTag);
-//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
-//                    System.out.println("channel.basicCancel!");
-//                    connection.close();//关闭连接
-//                } else {
-//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
-//                }
+//                if (message.equals("[Msg]4")) channel.basicCancel(consumerTag);
 
 
 //                if (message.equals("[Msg]5")) {
@@ -282,15 +271,11 @@ public class QueueTrial {
 //                    } catch (TimeoutException e) {
 //                        e.printStackTrace();
 //                    }
-//                } else {
-//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
 //                }
 
 //                if (message.equals("[Msg]7")) {
 //                    channel.queueDelete(QUEUE);//删除队列
 //                    System.out.println("channel.queueDelete!");
-//                } else {
-//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
 //                }
 
 
@@ -317,11 +302,9 @@ public class QueueTrial {
 
 
 //                if (delivery.getEnvelope().getDeliveryTag() == 3) {
-//                    channel.basicReject(delivery.getEnvelope().getDeliveryTag(), true);//使用批量确认
+//                    channel.basicReject(delivery.getEnvelope().getDeliveryTag(), true);//使用拒绝信息，并要求重入队列
+//                    channel.basicReject(delivery.getEnvelope().getDeliveryTag(), fasle);//使用拒绝信息，并要求直接抛弃
 //                    System.out.println(delivery.getEnvelope().getDeliveryTag() + " Reject!");
-//                } else {
-//                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//使用批量确认
-//                    System.out.println(delivery.getEnvelope().getDeliveryTag() + " ACK!");
 //                }
 
             };
