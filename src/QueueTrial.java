@@ -33,8 +33,8 @@ public class QueueTrial {
         queueTrial.send(connectionFactory);
 //        queueTrial.sendDurable(connectionFactory);
 
-        queueTrial.receive(connectionFactory);
-//        queueTrial.receiveWithDefaultConsumer(connectionFactory);
+//        queueTrial.receive(connectionFactory);
+        queueTrial.receiveWithDefaultConsumer(connectionFactory);
 
 //        queueTrial.pull(connectionFactory);
     }
@@ -141,16 +141,17 @@ public class QueueTrial {
                     System.out.println("properties is " + properties);
                     System.out.println("body is " + new String(body));
 
+                    channel.basicAck(envelope.getDeliveryTag(), false);//手动确认
+
+
                     if (envelope.getDeliveryTag() == 5) channel.basicCancel(consumerTag);
-                    if (envelope.getDeliveryTag() == 10) {
+
+                    if (envelope.getDeliveryTag() == 10)
                         try {
                             channel.close();
                         } catch (TimeoutException e) {
                             e.printStackTrace();
                         }
-                    } else {
-                        channel.basicAck(envelope.getDeliveryTag(), false);//手动确认
-                    }
 
 //                    try {
 //                        Thread.sleep(1000L);
