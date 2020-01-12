@@ -31,7 +31,7 @@ public class QueueTrial {
         ConnectionFactory connectionFactory = queueTrial.getFactory();
 
 
-//        queueTrial.receiveWithPriority(connectionFactory);
+        queueTrial.receiveWithPriority(connectionFactory);
         queueTrial.send(connectionFactory);
 //        queueTrial.sendDurable(connectionFactory);
 
@@ -51,7 +51,7 @@ public class QueueTrial {
             Channel channel = connection.createChannel();
             channel.basicQos(5);//流速控制
 
-
+            channel.queueDeclare(QUEUE, true, false, false, null);//声明队列
             DefaultConsumer customer = new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
@@ -410,8 +410,8 @@ public class QueueTrial {
 
             //方式一：手动设置队列名
 
-//            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, true, false, false, args);//声明队列
-            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, false, false, false, Map.of("x-max-priority", 5));//声明队列
+            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, true, false, false, null);//声明队列
+//            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, false, false, false, Map.of("x-max-priority", 5));//声明队列
             System.out.println(declareOk);
             System.out.println("getQueue is " + declareOk.getQueue());
             System.out.println("getMessageCount is " + declareOk.getMessageCount());

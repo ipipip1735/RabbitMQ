@@ -83,10 +83,23 @@ public class ConnectTrial {
             Channel channel = connection.createChannel();
             channel.queueDeclare(QUEUE, false, false, false, null);
 
-            for (int i = 0; i < 10; i++) {
-                String message = "[Msg]" + i;
-                channel.basicPublish("", QUEUE, null, message.getBytes());
-            }
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < 100; i++) {
+                        String message = "[Msg]" + i;
+                        try {
+                            channel.basicPublish("", QUEUE, null, message.getBytes());
+                            Thread.sleep(1000L);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }).start();
 
 
         } catch (TimeoutException e) {

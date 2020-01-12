@@ -16,8 +16,8 @@ public class CapabilitiesTrial {
 
         ConnectionFactory connectionFactory = capabilitiesTrial.getFactory();
 
-        capabilitiesTrial.send(connectionFactory);
-        capabilitiesTrial.abnormalCancel(connectionFactory);
+//        capabilitiesTrial.send(connectionFactory);
+//        capabilitiesTrial.abnormalCancel(connectionFactory);
 
     }
 
