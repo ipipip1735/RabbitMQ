@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -30,13 +31,58 @@ public class QueueTrial {
         ConnectionFactory connectionFactory = queueTrial.getFactory();
 
 
+//        queueTrial.receiveWithPriority(connectionFactory);
         queueTrial.send(connectionFactory);
 //        queueTrial.sendDurable(connectionFactory);
 
-        queueTrial.receive(connectionFactory);
+//        queueTrial.receive(connectionFactory);
 //        queueTrial.receiveWithDefaultConsumer(connectionFactory);
 
 //        queueTrial.pull(connectionFactory);
+    }
+
+    private void receiveWithPriority(ConnectionFactory connectionFactory) {
+
+        try {
+            Connection connection = connectionFactory.newConnection();
+
+            System.out.println(connection.getClientProperties());
+
+            Channel channel = connection.createChannel();
+            channel.basicQos(5);//流速控制
+
+
+            DefaultConsumer customer = new DefaultConsumer(channel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    System.out.println("~~deliverCallback~~");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("consumerTag is " + consumerTag);
+                    System.out.println("envelope is " + envelope);
+                    System.out.println("properties is " + properties);
+                    System.out.println("delivery.getBody is " + new String(body));
+
+//                    channel.basicAck(envelope.getDeliveryTag(), false);//手动确认
+
+                    try {
+                        Thread.sleep(100L);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            };
+
+            String consumerTag1 = channel.basicConsume(QUEUE, false, customer);
+            System.out.println("consumerTag1 is " + consumerTag1);
+            String consumerTag2 = channel.basicConsume(QUEUE, false, Map.of("x-priority", 1), customer);
+            System.out.println("consumerTag2 is " + consumerTag2);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
     }
 
     private void pull(ConnectionFactory connectionFactory) {
@@ -363,7 +409,9 @@ public class QueueTrial {
 //            System.out.println(channel);
 
             //方式一：手动设置队列名
-            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, false, false, false, null);//声明队列
+
+//            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, true, false, false, args);//声明队列
+            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, false, false, false, Map.of("x-max-priority", 5));//声明队列
             System.out.println(declareOk);
             System.out.println("getQueue is " + declareOk.getQueue());
             System.out.println("getMessageCount is " + declareOk.getMessageCount());

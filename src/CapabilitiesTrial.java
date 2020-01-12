@@ -16,8 +16,8 @@ public class CapabilitiesTrial {
 
         ConnectionFactory connectionFactory = capabilitiesTrial.getFactory();
 
-//        capabilitiesTrial.send(connectionFactory);
-//        capabilitiesTrial.abnormalCancel(connectionFactory);
+        capabilitiesTrial.send(connectionFactory);
+        capabilitiesTrial.abnormalCancel(connectionFactory);
 
     }
 
@@ -143,8 +143,8 @@ public class CapabilitiesTrial {
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {
 
-//            System.out.println(connection.getClientProperties());
-//            System.out.println(connection.getServerProperties());
+            System.out.println(connection.getClientProperties());//获取客户端属性集
+            System.out.println(connection.getServerProperties());//获取服务端属性集
 
 
             AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, false, false, false, null);

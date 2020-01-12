@@ -1,6 +1,7 @@
 import com.rabbitmq.client.*;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
@@ -21,8 +22,8 @@ public class ConnectTrial {
         ConnectTrial connectTrial = new ConnectTrial();
 
 //        connectTrial.connect();
-//        connectTrial.addListener();
-        connectTrial.addProperties();
+        connectTrial.addListener();
+//        connectTrial.addProperties();
 
 
     }
@@ -31,7 +32,17 @@ public class ConnectTrial {
 
         ConnectionFactory factory = new ConnectionFactory();
 
+        //获取属性集
         System.out.println(factory.getClientProperties());
+
+        //修改属性
+//        Map<String, Object> properties = factory.getClientProperties();
+//        Map capabilities = (Map) properties.get("capabilities");
+//        capabilities.put("consumer_cancel_notify", false);
+
+
+        //增加属性
+//        factory.getClientProperties().put("x-queue-mode", "lazy");
 
 
         try (Connection connection = factory.newConnection();
@@ -45,15 +56,12 @@ public class ConnectTrial {
     }
 
 
-
-
-
     private void addListener() {
 
 
         ConnectionFactory factory = new ConnectionFactory();
 
-        try  {
+        try {
 
             Connection connection = factory.newConnection();
             connection.addBlockedListener(new BlockedListener() {
@@ -73,6 +81,12 @@ public class ConnectTrial {
             });
 
             Channel channel = connection.createChannel();
+            channel.queueDeclare(QUEUE, false, false, false, null);
+
+            for (int i = 0; i < 10; i++) {
+                String message = "[Msg]" + i;
+                channel.basicPublish("", QUEUE, null, message.getBytes());
+            }
 
 
         } catch (TimeoutException e) {
