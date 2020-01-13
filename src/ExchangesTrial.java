@@ -36,7 +36,7 @@ public class ExchangesTrial {
 
 
         //交换属性
-        exchangesTrial.create(connectionFactory);
+//        exchangesTrial.create(connectionFactory);
 
 
         //扇出交换
@@ -57,6 +57,114 @@ public class ExchangesTrial {
         //头信息交换
 //        exchangesTrial.headerReceive(connectionFactory);
 //        exchangesTrial.headerSend(connectionFactory);
+
+
+        //交换链
+//        exchangesTrial.bindExchange(connectionFactory);
+//        exchangesTrial.sendToExchange(connectionFactory);
+
+        //备用交换
+        exchangesTrial.alterExchange(connectionFactory);
+//        exchangesTrial.sendAlter(connectionFactory);
+
+
+    }
+
+    private void sendAlter(ConnectionFactory connectionFactory) {
+
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
+
+            for (int i = 0; i < 10; i++) {
+                String message = "[Msg]" + i;
+                channel.basicPublish(E_ONE, "ete.one", null, message.getBytes());
+            }
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+    }
+
+    private void alterExchange(ConnectionFactory connectionFactory) {
+
+
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
+
+            channel.queueDeclare(Q_ONE, false, false, false, null);
+            channel.queueDeclare(Q_TWO, false, false, false, null);
+
+            channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, false, null);
+            channel.exchangeDeclare(E_TWO, BuiltinExchangeType.DIRECT, false, false, null);
+
+            channel.queueBind(Q_ONE, E_ONE, "one");
+            channel.queueBind(Q_TWO, E_TWO, "two");
+
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+    }
+
+    private void sendToExchange(ConnectionFactory connectionFactory) {
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
+
+            for (int i = 0; i < 10; i++) {
+                String message = "[Msg]" + i;
+                channel.basicPublish(E_ONE, "ete.one", null, message.getBytes());
+//                channel.basicPublish(E_ONE, "one", null, message.getBytes());
+//                channel.basicPublish(E_TWO, "two", null, message.getBytes());
+            }
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void bindExchange(ConnectionFactory connectionFactory) {
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
+
+            channel.queueDeclare(Q_ONE, false, false, false, null);
+            channel.queueDeclare(Q_TWO, false, false, false, null);
+
+//            channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, false, null);
+//            channel.exchangeDeclare(E_TWO, BuiltinExchangeType.DIRECT, false, false, null);
+            channel.exchangeDeclare(E_ONE, BuiltinExchangeType.TOPIC, false, false, null);
+            channel.exchangeDeclare(E_TWO, BuiltinExchangeType.TOPIC, false, false, null);
+
+            channel.queueBind(Q_ONE, E_ONE, "#.one");
+            channel.queueBind(Q_TWO, E_TWO, "*.two");
+            channel.exchangeBind(E_TWO, E_ONE,  "ete.#");
+
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void create(ConnectionFactory connectionFactory) {
@@ -89,7 +197,6 @@ public class ExchangesTrial {
 //            Map<String, Object> map = new HashMap<>();
 //            map.put("x-max-length", 1048576);//增加X参数
 //            channel.exchangeDeclare(E_TWO, BuiltinExchangeType.DIRECT, false, false, map);
-
 
 
         } catch (TimeoutException e) {

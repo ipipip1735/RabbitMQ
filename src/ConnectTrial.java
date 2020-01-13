@@ -87,11 +87,12 @@ public class ConnectTrial {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    for (int i = 0; i < 100; i++) {
+                    for (int i = 0; i < 1000; i++) {
                         String message = "[Msg]" + i;
+                        System.out.println("send " + message);
                         try {
                             channel.basicPublish("", QUEUE, null, message.getBytes());
-                            Thread.sleep(1000L);
+                            Thread.sleep(100L);
                         } catch (IOException e) {
                             e.printStackTrace();
                         } catch (InterruptedException e) {

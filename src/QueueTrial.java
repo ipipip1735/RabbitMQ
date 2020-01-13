@@ -31,14 +31,14 @@ public class QueueTrial {
         ConnectionFactory connectionFactory = queueTrial.getFactory();
 
 
-        queueTrial.receiveWithPriority(connectionFactory);
-        queueTrial.send(connectionFactory);
-//        queueTrial.sendDurable(connectionFactory);
-
-//        queueTrial.receive(connectionFactory);
+        queueTrial.receive(connectionFactory);
 //        queueTrial.receiveWithDefaultConsumer(connectionFactory);
+//        queueTrial.receiveWithPriority(connectionFactory);
 
 //        queueTrial.pull(connectionFactory);
+
+//        queueTrial.send(connectionFactory);
+//        queueTrial.sendDurable(connectionFactory);
     }
 
     private void receiveWithPriority(ConnectionFactory connectionFactory) {
@@ -273,6 +273,22 @@ public class QueueTrial {
 
         try {
             Connection connection = connectionFactory.newConnection();
+            connection.addBlockedListener(new BlockedListener() {
+                @Override
+                public void handleBlocked(String reason) throws IOException {
+                    System.out.println("~~handleBlocked~~");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("reason is " + reason);
+                }
+
+                @Override
+                public void handleUnblocked() throws IOException {
+                    System.out.println("~~handleUnblocked~~");
+                    System.out.println(Thread.currentThread());
+
+                }
+            });
+
             Channel channel = connection.createChannel();
             channel.basicQos(5);//流速控制
 
@@ -289,7 +305,7 @@ public class QueueTrial {
 
 
                 try {
-                    Thread.sleep(100L);
+                    Thread.sleep(2000L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
