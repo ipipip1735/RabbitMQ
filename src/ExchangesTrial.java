@@ -72,7 +72,6 @@ public class ExchangesTrial {
 
     private void sendAlter(ConnectionFactory connectionFactory) {
 
-
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {
             System.out.println(channel);
@@ -88,13 +87,9 @@ public class ExchangesTrial {
             e.printStackTrace();
         }
 
-
-
     }
 
     private void alterExchange(ConnectionFactory connectionFactory) {
-
-
 
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {
@@ -109,14 +104,11 @@ public class ExchangesTrial {
             channel.queueBind(Q_ONE, E_ONE, "one");
             channel.queueBind(Q_TWO, E_TWO, "two");
 
-
         } catch (TimeoutException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
 
     }
 
@@ -128,7 +120,7 @@ public class ExchangesTrial {
 
             for (int i = 0; i < 10; i++) {
                 String message = "[Msg]" + i;
-                channel.basicPublish(E_ONE, "ete.one", null, message.getBytes());
+                channel.basicPublish(E_ONE, "ete.two", null, message.getBytes());
 //                channel.basicPublish(E_ONE, "one", null, message.getBytes());
 //                channel.basicPublish(E_TWO, "two", null, message.getBytes());
             }
@@ -152,12 +144,20 @@ public class ExchangesTrial {
 
 //            channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, false, null);
 //            channel.exchangeDeclare(E_TWO, BuiltinExchangeType.DIRECT, false, false, null);
-            channel.exchangeDeclare(E_ONE, BuiltinExchangeType.TOPIC, false, false, null);
+
+            channel.exchangeDeclare(E_ONE, BuiltinExchangeType.TOPIC, false, true, null);
             channel.exchangeDeclare(E_TWO, BuiltinExchangeType.TOPIC, false, false, null);
 
             channel.queueBind(Q_ONE, E_ONE, "#.one");
             channel.queueBind(Q_TWO, E_TWO, "*.two");
-            channel.exchangeBind(E_TWO, E_ONE,  "ete.#");
+            channel.exchangeBind(E_TWO, E_ONE, "ete.#");//绑定交换
+
+
+
+            //解绑交换
+//            channel.queueUnbind(Q_ONE, E_ONE, "#.one");
+//            channel.exchangeUnbind(E_TWO, E_ONE, "ete.#");
+
 
 
         } catch (TimeoutException e) {
