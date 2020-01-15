@@ -31,9 +31,9 @@ public class QueueTrial {
         ConnectionFactory connectionFactory = queueTrial.getFactory();
 
 
-        queueTrial.receive(connectionFactory);
+//        queueTrial.receive(connectionFactory);
 //        queueTrial.receiveWithDefaultConsumer(connectionFactory);
-//        queueTrial.receiveWithPriority(connectionFactory);
+        queueTrial.receiveWithPriority(connectionFactory);
 
 //        queueTrial.pull(connectionFactory);
 

@@ -65,12 +65,12 @@ public class ExchangesTrial {
 
         //备用交换
         exchangesTrial.alterExchange(connectionFactory);
-//        exchangesTrial.sendAlter(connectionFactory);
+        exchangesTrial.sendAlterExchange(connectionFactory);
 
 
     }
 
-    private void sendAlter(ConnectionFactory connectionFactory) {
+    private void sendAlterExchange(ConnectionFactory connectionFactory) {
 
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {
@@ -78,7 +78,7 @@ public class ExchangesTrial {
 
             for (int i = 0; i < 10; i++) {
                 String message = "[Msg]" + i;
-                channel.basicPublish(E_ONE, "ete.one", null, message.getBytes());
+                channel.basicPublish(E_ONE, "two", null, message.getBytes());
             }
 
         } catch (TimeoutException e) {
