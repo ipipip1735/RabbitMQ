@@ -30,15 +30,42 @@ public class QueueTrial {
 
         ConnectionFactory connectionFactory = queueTrial.getFactory();
 
+        queueTrial.queueTTL(connectionFactory);//队列TTL
 
-//        queueTrial.receive(connectionFactory);
+
+        queueTrial.receive(connectionFactory);
 //        queueTrial.receiveWithDefaultConsumer(connectionFactory);
-        queueTrial.receiveWithPriority(connectionFactory);
+//        queueTrial.receiveWithPriority(connectionFactory);
 
 //        queueTrial.pull(connectionFactory);
 
 //        queueTrial.send(connectionFactory);
 //        queueTrial.sendDurable(connectionFactory);
+
+
+    }
+
+    private void queueTTL(ConnectionFactory connectionFactory) {
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
+
+            Map<String, Object> args = new HashMap<String, Object>();
+            args.put("x-expires", 10 * 1000);
+            channel.queueDeclare(QUEUE, false, false, true, args);
+
+            for (int i = 0; i < 10; i++) {
+                String message = "[Msg]" + i;
+                channel.basicPublish("", QUEUE, null, message.getBytes());
+            }
+
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void receiveWithPriority(ConnectionFactory connectionFactory) {
@@ -273,24 +300,25 @@ public class QueueTrial {
 
         try {
             Connection connection = connectionFactory.newConnection();
-            connection.addBlockedListener(new BlockedListener() {
-                @Override
-                public void handleBlocked(String reason) throws IOException {
-                    System.out.println("~~handleBlocked~~");
-                    System.out.println(Thread.currentThread());
-                    System.out.println("reason is " + reason);
-                }
-
-                @Override
-                public void handleUnblocked() throws IOException {
-                    System.out.println("~~handleUnblocked~~");
-                    System.out.println(Thread.currentThread());
-
-                }
-            });
+            //资源警报监听器
+//            connection.addBlockedListener(new BlockedListener() {
+//                @Override
+//                public void handleBlocked(String reason) throws IOException {
+//                    System.out.println("~~handleBlocked~~");
+//                    System.out.println(Thread.currentThread());
+//                    System.out.println("reason is " + reason);
+//                }
+//
+//                @Override
+//                public void handleUnblocked() throws IOException {
+//                    System.out.println("~~handleUnblocked~~");
+//                    System.out.println(Thread.currentThread());
+//
+//                }
+//            });
 
             Channel channel = connection.createChannel();
-            channel.basicQos(5);//流速控制
+            channel.basicQos(1);//流速控制
 
             System.out.println(channel);
 
@@ -304,11 +332,11 @@ public class QueueTrial {
                 System.out.println("delivery.getBody is " + message);
 
 
-                try {
-                    Thread.sleep(2000L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    Thread.sleep(2000L);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
 
                 channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);//手动确认
 
@@ -341,14 +369,14 @@ public class QueueTrial {
 //                }
 
 
-//                if (message.equals("[Msg]9")) {
-//                    try {
-//                        System.out.println("channel.close!");
-//                        channel.close();
-//                    } catch (TimeoutException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
+                if (message.equals("[Msg]9")) {
+                    try {
+                        System.out.println("channel.close!");
+                        channel.close();
+                    } catch (TimeoutException e) {
+                        e.printStackTrace();
+                    }
+                }
 
 
 //                if ( delivery.getEnvelope().getDeliveryTag() % 5 == 0) {

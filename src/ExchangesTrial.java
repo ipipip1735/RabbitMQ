@@ -64,11 +64,12 @@ public class ExchangesTrial {
 //        exchangesTrial.sendToExchange(connectionFactory);
 
         //备用交换
-        exchangesTrial.alterExchange(connectionFactory);
-        exchangesTrial.sendAlterExchange(connectionFactory);
+//        exchangesTrial.alterExchange(connectionFactory);
+//        exchangesTrial.sendAlterExchange(connectionFactory);
 
 
     }
+
 
     private void sendAlterExchange(ConnectionFactory connectionFactory) {
 
