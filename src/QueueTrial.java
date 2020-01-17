@@ -30,7 +30,7 @@ public class QueueTrial {
 
         ConnectionFactory connectionFactory = queueTrial.getFactory();
 
-        queueTrial.queueTTL(connectionFactory);//队列TTL
+//        queueTrial.queueTTL(connectionFactory);//队列TTL
 
 
         queueTrial.receive(connectionFactory);

@@ -63,10 +63,61 @@ public class ExchangesTrial {
 //        exchangesTrial.bindExchange(connectionFactory);
 //        exchangesTrial.sendToExchange(connectionFactory);
 
+
         //备用交换
 //        exchangesTrial.alterExchange(connectionFactory);
 //        exchangesTrial.sendAlterExchange(connectionFactory);
 
+
+        //空文交换
+        exchangesTrial.addDLX(connectionFactory);
+        exchangesTrial.sendDLX(connectionFactory);
+
+    }
+
+    private void sendDLX(ConnectionFactory connectionFactory) {
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
+
+            for (int i = 0; i < 10; i++) {
+                String message = "[Msg]" + i;
+                channel.basicPublish(E_ONE, "two", null, message.getBytes());
+            }
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void addDLX(ConnectionFactory connectionFactory) {
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
+
+            Map<String, Object> args = new HashMap<String, Object>();
+            args.put("x-dead-letter-exchange", E_TWO);
+            args.put("x-dead-letter-routing-key", "two");
+
+            channel.queueDeclare(Q_ONE, false, false, false, args);
+            channel.queueDeclare(Q_TWO, false, false, false, null);
+
+            channel.exchangeDeclare(E_ONE, BuiltinExchangeType.DIRECT, false, false, null);
+            channel.exchangeDeclare(E_TWO, BuiltinExchangeType.DIRECT, false, false, null);
+
+            channel.queueBind(Q_ONE, E_ONE, "one");
+            channel.queueBind(Q_TWO, E_TWO, "two");
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
