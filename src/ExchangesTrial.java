@@ -70,31 +70,51 @@ public class ExchangesTrial {
 
 
         //空文交换
-        exchangesTrial.addDLX(connectionFactory);
+        exchangesTrial.declareDLX(connectionFactory);
         exchangesTrial.sendDLX(connectionFactory);
+//        exchangesTrial.receiverDLX(connectionFactory);
+        exchangesTrial.processDLX(connectionFactory);
+
 
     }
 
-    private void sendDLX(ConnectionFactory connectionFactory) {
+    private void processDLX(ConnectionFactory connectionFactory) {
 
-        try (Connection connection = connectionFactory.newConnection();
-             Channel channel = connection.createChannel()) {
+        try {
+            Connection connection = connectionFactory.newConnection();
+            Channel channel = connection.createChannel();
             System.out.println(channel);
 
-            for (int i = 0; i < 10; i++) {
-                String message = "[Msg]" + i;
-                channel.basicPublish(E_ONE, "two", null, message.getBytes());
-            }
+            channel.basicQos(1);
+            channel.basicConsume(Q_TWO, false, new Customer(channel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    try {
+                        Thread.sleep(1000L);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println("~~[DLX]handleDelivery~~");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("[DLX]consumerTag is " + consumerTag);
+                    System.out.println("[DLX]envelope is " + envelope);
+                    System.out.println("[DLX]properties is " + properties);
+                    System.out.println("[DLX]body is " + new String(body));
+
+
+                    channel.basicAck(envelope.getDeliveryTag(), false);
+                }
+            });
 
         } catch (TimeoutException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
-    private void addDLX(ConnectionFactory connectionFactory) {
+    private void declareDLX(ConnectionFactory connectionFactory) {
 
         try (Connection connection = connectionFactory.newConnection();
              Channel channel = connection.createChannel()) {
@@ -103,6 +123,9 @@ public class ExchangesTrial {
             Map<String, Object> args = new HashMap<String, Object>();
             args.put("x-dead-letter-exchange", E_TWO);
             args.put("x-dead-letter-routing-key", "two");
+//            args.put("x-message-ttl", 3000);
+            args.put("x-max-length", 5);
+
 
             channel.queueDeclare(Q_ONE, false, false, false, args);
             channel.queueDeclare(Q_TWO, false, false, false, null);
@@ -119,6 +142,67 @@ public class ExchangesTrial {
             e.printStackTrace();
         }
 
+
+    }
+
+    private void sendDLX(ConnectionFactory connectionFactory) {
+
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
+            System.out.println(channel);
+
+            for (int i = 0; i < 10; i++) {
+                String message = "[Msg]" + i;
+                channel.basicPublish(E_ONE, "one", null, message.getBytes());
+            }
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void receiverDLX(ConnectionFactory connectionFactory) {
+
+        try {
+            Connection connection = connectionFactory.newConnection();
+            Channel channel = connection.createChannel();
+
+            System.out.println(channel);
+            channel.basicQos(1);
+            channel.basicConsume(Q_ONE, false, new Customer(channel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    System.out.println("~~handleDelivery~~");
+                    System.out.println(Thread.currentThread());
+                    System.out.println("consumerTag is " + consumerTag);
+                    System.out.println("envelope is " + envelope);
+                    System.out.println("properties is " + properties);
+                    System.out.println("body is " + new String(body));
+
+
+                    if (envelope.getDeliveryTag() == 4) {
+                        getChannel().basicReject(envelope.getDeliveryTag(), false);
+                    } else {
+                        getChannel().basicAck(envelope.getDeliveryTag(), false);
+                    }
+
+
+                    if (envelope.getDeliveryTag() == 10) try {
+                        getChannel().close();
+                    } catch (TimeoutException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -205,11 +289,9 @@ public class ExchangesTrial {
             channel.exchangeBind(E_TWO, E_ONE, "ete.#");//绑定交换
 
 
-
             //解绑交换
 //            channel.queueUnbind(Q_ONE, E_ONE, "#.one");
 //            channel.exchangeUnbind(E_TWO, E_ONE, "ete.#");
-
 
 
         } catch (TimeoutException e) {
@@ -685,4 +767,79 @@ public class ExchangesTrial {
 
         return factory;
     }
+
+
+    class Customer extends DefaultConsumer {
+        /**
+         * Constructs a new instance and records its association to the passed-in channel.
+         *
+         * @param channel the channel to which this consumer is attached
+         */
+        public Customer(Channel channel) {
+            super(channel);
+        }
+
+
+        @Override
+        public void handleConsumeOk(String consumerTag) {
+            System.out.println("~~handleConsumeOk~~");
+            System.out.println(Thread.currentThread());
+            System.out.println("consumerTag is " + consumerTag);
+        }
+
+        @Override
+        public void handleCancelOk(String consumerTag) {
+            System.out.println("~~handleCancelOk~~");
+            System.out.println(Thread.currentThread());
+            System.out.println("consumerTag is " + consumerTag);
+
+            try {
+                getChannel().getConnection().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void handleCancel(String consumerTag) throws IOException {
+            System.out.println("~~handleCancel~~");
+            System.out.println(Thread.currentThread());
+            System.out.println("consumerTag is " + consumerTag);
+
+            getChannel().getConnection().close();
+        }
+
+        @Override
+        public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
+            System.out.println("~~handleShutdownSignal~~");
+            System.out.println(Thread.currentThread());
+            System.out.println("consumerTag is " + consumerTag);
+            System.out.println("sig is " + sig);
+
+            try {
+                getChannel().getConnection().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void handleRecoverOk(String consumerTag) {
+            System.out.println("~~handleRecoverOk~~");
+            System.out.println(Thread.currentThread());
+            System.out.println("consumerTag is " + consumerTag);
+        }
+
+
+        @Override
+        public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+            System.out.println("~~handleDelivery~~");
+            System.out.println(Thread.currentThread());
+            System.out.println("consumerTag is " + consumerTag);
+            System.out.println("envelope is " + envelope);
+            System.out.println("properties is " + properties);
+            System.out.println("body is " + new String(body));
+        }
+    }
+
 }

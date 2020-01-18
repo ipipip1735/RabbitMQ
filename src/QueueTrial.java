@@ -30,7 +30,7 @@ public class QueueTrial {
 
         ConnectionFactory connectionFactory = queueTrial.getFactory();
 
-//        queueTrial.queueTTL(connectionFactory);//队列TTL
+        queueTrial.queueTTL(connectionFactory);//队列TTL
 
 
         queueTrial.receive(connectionFactory);
@@ -52,12 +52,18 @@ public class QueueTrial {
             System.out.println(channel);
 
             Map<String, Object> args = new HashMap<String, Object>();
-            args.put("x-expires", 10 * 1000);
+            args.put("x-expires", 10 * 1000);//队列本身的TTL
+//            args.put("x-message-ttl", 3000);//队列中每个信息的TTL
             channel.queueDeclare(QUEUE, false, false, true, args);
+
+            BasicProperties properties = new AMQP.BasicProperties.Builder()
+                    .expiration("6000")//设置信息本身TTL
+                    .build();
 
             for (int i = 0; i < 10; i++) {
                 String message = "[Msg]" + i;
                 channel.basicPublish("", QUEUE, null, message.getBytes());
+//                channel.basicPublish("", QUEUE, properties, message.getBytes());
             }
 
 
