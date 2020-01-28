@@ -39,7 +39,7 @@ public class QueueTrial {
 
 //        queueTrial.pull(connectionFactory);
 
-//        queueTrial.send(connectionFactory);
+        queueTrial.send(connectionFactory);
 //        queueTrial.sendDurable(connectionFactory);
 
 
@@ -459,7 +459,6 @@ public class QueueTrial {
 //            System.out.println(channel);
 
             //方式一：手动设置队列名
-
             AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, true, false, false, null);//声明队列
 //            AMQP.Queue.DeclareOk declareOk = channel.queueDeclare(QUEUE, false, false, false, Map.of("x-max-priority", 5));//声明队列
             System.out.println(declareOk);

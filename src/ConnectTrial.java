@@ -21,8 +21,8 @@ public class ConnectTrial {
     public static void main(String[] args) {
         ConnectTrial connectTrial = new ConnectTrial();
 
-//        connectTrial.connect();
-        connectTrial.addListener();
+        connectTrial.connect();
+//        connectTrial.addListener();
 //        connectTrial.addProperties();
 
 
@@ -114,18 +114,22 @@ public class ConnectTrial {
 
 
         ConnectionFactory factory = new ConnectionFactory();
-//        //factory.setUsername(userName);
+
+        //方式一
+//        //factory.setUsername(userName);//设置用户名密码
 //        //factory.setPassword(password);
-//        //factory.setVirtualHost(virtualHost);
-//        //factory.setPort(port);
+//        //factory.setVirtualHost(virtualHost);//设置虚拟主机
+//        //factory.setPort(port);//设置Socket
 //        //factory.setHost(host);
 
-        factory.setRequestedChannelMax(10);
-//        //factory.setSslContextFactory(sslContext);
+//        factory.setRequestedChannelMax(10);//设置连接最大通道数
+        factory.setRequestedHeartbeat(20);//设置心跳超时时间
+//        //factory.setSslContextFactory(sslContext);//设置SSL上下文
+
 
 
 //        try {
-//            URI uri = new URI("amqp://userName:password@hostName:portNumber/virtualHost");
+//            URI uri = new URI("amqp://userName:password@hostName:portNumber/virtualHost");//使用URI设置Socket
 //            factory.setUri(uri);
 //        } catch (URISyntaxException e) {
 //            e.printStackTrace();
@@ -136,8 +140,9 @@ public class ConnectTrial {
 //        }
 
 
-        try (Connection connection = factory.newConnection();
-             Channel channel = connection.createChannel()) {
+        try {
+            Connection connection = factory.newConnection();
+            Channel channel = connection.createChannel();
 
         } catch (TimeoutException e) {
             e.printStackTrace();
